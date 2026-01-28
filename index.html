@@ -65,4 +65,115 @@ html, body {
 
 #questionBox {
   background: #222;
-  paddin
+  padding: 20px;
+  border-radius: 14px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.answer {
+  margin-top: 12px;
+  padding: 10px;
+  background: #444;
+  border-radius: 8px;
+}
+.answer:active {
+  background: #666;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+  <img src="hero.png" class="hero" id="hero">
+  <img src="monster.png" class="monster" id="monster">
+  <img src="gift.png" class="gift" id="gift">
+
+  <button id="startBtn">▶ Start</button>
+
+  <div id="question">
+    <div id="questionBox">
+      <h3>Якби ти була супергероєм, то яку б суперсилу ти мала?</h3>
+      <div class="answer">1️⃣ Читати думки 🤯</div>
+      <div class="answer">2️⃣ Зупиняти час ☕⏸️</div>
+      <div class="answer">3️⃣ Все спрощувати ✨😎</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const game = document.getElementById("game");
+const hero = document.getElementById("hero");
+const monster = document.getElementById("monster");
+const gift = document.getElementById("gift");
+const startBtn = document.getElementById("startBtn");
+const question = document.getElementById("question");
+const answers = document.querySelectorAll(".answer");
+
+let running = false;
+let bgX = 0;
+
+// ❗ фіксовані відстані
+const monsterDistance = 600;
+const giftDistance = 1000;
+
+let monsterAlive = true;
+
+function updatePositions() {
+  monster.style.left = (80 + monsterDistance + bgX) + "px";
+  gift.style.left   = (80 + giftDistance + bgX) + "px";
+}
+
+function collide(a, b) {
+  const r1 = a.getBoundingClientRect();
+  const r2 = b.getBoundingClientRect();
+  return !(
+    r1.right < r2.left ||
+    r1.left > r2.right ||
+    r1.bottom < r2.top ||
+    r1.top > r2.bottom
+  );
+}
+
+function loop() {
+  if (!running) return;
+
+  bgX -= 0.5;
+  game.style.backgroundPositionX = bgX + "px";
+
+  updatePositions();
+
+  if (monsterAlive && collide(hero, monster)) {
+    running = false;
+    question.style.display = "flex";
+  }
+
+  if (!monsterAlive && collide(hero, gift)) {
+    running = false;
+    alert("🎁 Вітаю! Ти дійшла до подарунка!");
+  }
+
+  requestAnimationFrame(loop);
+}
+
+startBtn.onclick = () => {
+  running = true;
+  startBtn.style.display = "none";
+  updatePositions();
+  loop();
+};
+
+answers.forEach(a => {
+  a.onclick = () => {
+    monsterAlive = false;
+    monster.style.display = "none";
+    question.style.display = "none";
+    running = true;
+    loop();
+  };
+});
+</script>
+
+</body>
+</html>
