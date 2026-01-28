@@ -2,91 +2,154 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Дійти до подарунку 🎁</title>
+<title>Лабіринт до подарунку 🎁</title>
 <style>
-  body { margin: 0; overflow: hidden; background: #fef6e5; font-family: Arial; }
-  #gameArea { position: relative; width: 100vw; height: 100vh; }
-  #player { position: absolute; width: 50px; height: 50px; background: red; bottom: 10px; left: 10px; border-radius: 50%; }
-  #gift { position: absolute; width: 60px; height: 60px; background: gold; top: 10px; right: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-  #confetti { position: absolute; width: 100%; height: 100%; pointer-events: none; display: none; }
+  body { margin:0; overflow:hidden; background:#fef6e5; touch-action: none; font-family: Arial;}
+  #gameArea { position:relative; width:100vw; height:100vh; background:#fff6e5;}
+  #player { position:absolute; width:50px; height:50px; left:10px; top:calc(100vh - 60px); z-index:5; }
+  #gift { position:absolute; width:60px; height:60px; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;}
+  #monster { position:absolute; width:50px; height:50px; left:50%; top:30%; transform:translate(-50%,0); z-index:4; cursor:pointer;}
+  .wall { position:absolute; background:#444; z-index:3; }
+  #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10;}
 </style>
 </head>
 <body>
 
 <div id="gameArea">
-  <div id="player"></div>
-  <div id="gift">🎁</div>
+  <img id="player" src="player.png" alt="Гравець">
+  <img id="gift" src="gift.png" alt="Подарунок">
+  <img id="monster" src="monster.png" alt="Монстр">
   <canvas id="confetti"></canvas>
 </div>
 
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-Telegram.WebApp.ready();
-
+const gameArea = document.getElementById('gameArea');
 const player = document.getElementById('player');
 const gift = document.getElementById('gift');
+const monster = document.getElementById('monster');
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
 confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
-let posX = 10, posY = window.innerHeight - 60; // стартові координати
-const step = 20;
+let posX = 10;
+let posY = window.innerHeight - 60;
 
-// рух стрілками
-document.addEventListener('keydown', (e) => {
-    if(e.key === "ArrowUp") posY -= step;
-    if(e.key === "ArrowDown") posY += step;
-    if(e.key === "ArrowLeft") posX -= step;
-    if(e.key === "ArrowRight") posX += step;
-    
-    // межі
-    posX = Math.max(0, Math.min(posX, window.innerWidth - 50));
-    posY = Math.max(0, Math.min(posY, window.innerHeight - 50));
+let monsterClicks = 0;
 
-    player.style.left = posX + 'px';
-    player.style.top = posY + 'px';
+// Лабіринт стіни
+const walls = [];
+function createWall(x, y, w, h){
+  const wall = document.createElement('div');
+  wall.classList.add('wall');
+  wall.style.left = x+'px';
+  wall.style.top = y+'px';
+  wall.style.width = w+'px';
+  wall.style.height = h+'px';
+  gameArea.appendChild(wall);
+  walls.push(wall);
+}
+// Приклад лабіринту (можна додавати більше)
+createWall(100,100,200,20);
+createWall(300,150,20,200);
+createWall(50,300,250,20);
 
-    checkCollision();
+// Перевірка зіткнення
+function isColliding(el1Rect, el2Rect){
+  return !(el1Rect.right < el2Rect.left || 
+           el1Rect.left > el2Rect.right || 
+           el1Rect.bottom < el2Rect.top || 
+           el1Rect.top > el2Rect.bottom);
+}
+
+// Обробка руху
+function movePlayer(dx, dy){
+  let newX = posX + dx;
+  let newY = posY + dy;
+
+  const tempRect = {left:newX, top:newY, right:newX+50, bottom:newY+50};
+
+  for(const wall of walls){
+    const wallRect = wall.getBoundingClientRect();
+    if(isColliding(tempRect, wallRect)) return; // зіткнення зі стіною
+  }
+
+  // монстр блокує рух, якщо не клікнули 3 рази
+  const monsterRect = monster.getBoundingClientRect();
+  if(monsterClicks < 3 && isColliding(tempRect, monsterRect)) return;
+
+  posX = newX;
+  posY = newY;
+  player.style.left = posX+'px';
+  player.style.top = posY+'px';
+
+  checkGift();
+}
+
+// Перевірка досягнення подарунку
+function checkGift(){
+  const playerRect = player.getBoundingClientRect();
+  const giftRect = gift.getBoundingClientRect();
+  if(isColliding(playerRect, giftRect)){
+    showConfetti();
+  }
+}
+
+// Конфеті
+function showConfetti(){
+  confettiCanvas.style.display='block';
+  const pieces=[];
+  for(let i=0;i<200;i++){
+    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
+  }
+  function animate(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    for(const p of pieces){
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+      ctx.fill();
+      p.y += p.dy;
+      if(p.y>window.innerHeight)p.y=0;
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+  alert("🎉 Вітаємо! Ти відкрив подарунок!");
+}
+
+// Монстр: клік по ньому
+monster.addEventListener('click', ()=>{
+  monsterClicks++;
+  if(monsterClicks>=3){
+    monster.style.opacity = 0.5; // прохідний
+  }
 });
 
-// перевірка досягнення подарунку
-function checkCollision() {
-    const playerRect = player.getBoundingClientRect();
-    const giftRect = gift.getBoundingClientRect();
-    
-    if(!(playerRect.right < giftRect.left || 
-         playerRect.left > giftRect.right || 
-         playerRect.bottom < giftRect.top || 
-         playerRect.top > giftRect.bottom)) {
-        showConfetti();
-    }
-}
+// Свайпи / drag для мобільного
+let startX, startY;
+player.addEventListener('touchstart',(e)=>{
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+player.addEventListener('touchmove',(e)=>{
+  let dx = e.touches[0].clientX - startX;
+  let dy = e.touches[0].clientY - startY;
+  movePlayer(dx, dy);
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+  e.preventDefault();
+});
 
-// просте конфеті
-function showConfetti() {
-    confettiCanvas.style.display = 'block';
-    const pieces = [];
-    for(let i=0;i<200;i++){
-        pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r:Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
-    }
-    function animate(){
-        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-        for(let p of pieces){
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
-            ctx.fill();
-            p.y += p.dy;
-            if(p.y>window.innerHeight) p.y=0;
-        }
-        requestAnimationFrame(animate);
-    }
-    animate();
-    alert("🎉 Вітаємо!!"); // сюрприз
-}
+// клавіші для ПК
+document.addEventListener('keydown',(e)=>{
+  const step=20;
+  if(e.key==='ArrowUp') movePlayer(0,-step);
+  if(e.key==='ArrowDown') movePlayer(0,step);
+  if(e.key==='ArrowLeft') movePlayer(-step,0);
+  if(e.key==='ArrowRight') movePlayer(step,0);
+});
 </script>
 
 </body>
 </html>
-
