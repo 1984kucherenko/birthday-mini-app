@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Бігуча героїня</title>
+<title>Біжучий герой</title>
 <style>
   body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
   #gameArea {
@@ -10,43 +10,50 @@
     width:100vw;
     height:100vh;
     overflow:hidden;
-    background: #87ceeb; /* тимчасовий фон, можна замінити на картинку */
+    background: #a0d8f1;
   }
-  #bg1, #bg2 {
+  #background1, #background2 {
     position:absolute;
-    top:0; left:0;
-    width:100vw;
-    height:100vh;
+    top:0;
+    width:200%;
+    height:100%;
     background: url('background.png') repeat-x;
     background-size: cover;
   }
   #player {
     position:absolute;
-    width:64px;
-    height:64px;
+    width:50px;
+    height:50px;
     left:50px;
     bottom:20px;
     z-index:5;
-    background: url('player_sprite.png') 0 0 no-repeat;
   }
-  #monster, #gift {
+  #monster {
     position:absolute;
     width:50px;
     height:50px;
+    left:500px;
     bottom:20px;
     z-index:4;
+    cursor:pointer;
   }
-  #monster { left:600px; cursor:pointer; }
-  #gift { left:1200px; }
-  #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10;}
+  #gift {
+    position:absolute;
+    width:60px;
+    height:60px;
+    left:1000px;
+    bottom:20px;
+    z-index:5;
+  }
+  #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10; }
 </style>
 </head>
 <body>
 
 <div id="gameArea">
-  <div id="bg1"></div>
-  <div id="bg2"></div>
-  <div id="player"></div>
+  <div id="background1"></div>
+  <div id="background2"></div>
+  <img id="player" src="player.png" alt="Героїня">
   <img id="monster" src="monster.png" alt="Монстр">
   <img id="gift" src="gift.png" alt="Подарунок">
   <canvas id="confetti"></canvas>
@@ -56,119 +63,31 @@
 const player = document.getElementById('player');
 const monster = document.getElementById('monster');
 const gift = document.getElementById('gift');
-const bg1 = document.getElementById('bg1');
-const bg2 = document.getElementById('bg2');
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
 confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
-let bgX1 = 0;
-let bgX2 = window.innerWidth;
-let bgSpeed = 4;
-
-let monsterX = 600;
-let giftX = 1200;
-
 let monsterClicks = 0;
+let bg1 = document.getElementById('background1');
+let bg2 = document.getElementById('background2');
+let bgX = 0;
+const speed = 3; // швидкість руху вперед
 
-// --- Спрайт анімація гравця ---
-let spriteFrame = 0;
-const spriteWidth = 64;
-const spriteHeight = 64;
-const totalFrames = 6; // кількість кадрів у спрайті
-let spriteCounter = 0;
-
-// --- Основний цикл ---
 function gameLoop(){
-  // рух фону
-  bgX1 -= bgSpeed;
-  bgX2 -= bgSpeed;
-  if(bgX1 <= -window.innerWidth) bgX1 = window.innerWidth;
-  if(bgX2 <= -window.innerWidth) bgX2 = window.innerWidth;
-  bg1.style.left = bgX1 + 'px';
-  bg2.style.left = bgX2 + 'px';
+  // Прокрутка фону
+  bgX -= speed;
+  if(bgX <= -window.innerWidth) bgX = 0;
+  bg1.style.left = bgX + 'px';
+  bg2.style.left = (bgX + window.innerWidth) + 'px';
 
-  // рух монстра і подарунку разом з фоном
-  monsterX -= bgSpeed;
-  giftX -= bgSpeed;
-  monster.style.left = monsterX + 'px';
-  gift.style.left = giftX + 'px';
+  // Рух монстра і подарунку разом із фоном
+  monster.style.left = (parseInt(monster.style.left || 500) - speed) + 'px';
+  gift.style.left = (parseInt(gift.style.left || 1000) - speed) + 'px';
 
-  // перевірка зіткнення з монстром
-  checkMonster();
-  // перевірка досягнення подарунку
-  checkGift();
-
-  // спрайт гравця
-  spriteCounter++;
-  if(spriteCounter % 5 === 0){ // регулюємо швидкість анімації
-    spriteFrame = (spriteFrame +1) % totalFrames;
-    player.style.backgroundPosition = `-${spriteFrame * spriteWidth}px 0px`;
-  }
-
-  requestAnimationFrame(gameLoop);
-}
-
-// --- Монстр ---
-function checkMonster(){
+  // Монстр блокує рух (зупинка героя візуальна)
   const playerRect = player.getBoundingClientRect();
   const monsterRect = monster.getBoundingClientRect();
-
-  if(monsterClicks < 3 &&
+  if(monsterClicks < 3 && 
      !(playerRect.right < monsterRect.left || 
        playerRect.left > monsterRect.right || 
-       playerRect.bottom < monsterRect.top || 
-       playerRect.top > monsterRect.bottom)) {
-         // зупинка героя
-         monsterX += bgSpeed; // не даємо пройти
-  }
-}
-
-monster.addEventListener('click', ()=>{
-  monsterClicks++;
-  if(monsterClicks >= 3){
-    monster.style.opacity = 0.5; // можна пройти
-  }
-});
-
-// --- Подарунок ---
-function checkGift(){
-  const playerRect = player.getBoundingClientRect();
-  const giftRect = gift.getBoundingClientRect();
-  if(!(playerRect.right < giftRect.left || 
-       playerRect.left > giftRect.right || 
-       playerRect.bottom < giftRect.top || 
-       playerRect.top > giftRect.bottom)){
-    showConfetti();
-  }
-}
-
-// --- Конфеті ---
-function showConfetti(){
-  confettiCanvas.style.display='block';
-  const pieces=[];
-  for(let i=0;i<200;i++){
-    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
-  }
-  function animate(){
-    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-    for(const p of pieces){
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
-      ctx.fill();
-      p.y += p.dy;
-      if(p.y>window.innerHeight)p.y=0;
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
-  alert("🎉 Вітаємо! Героїня дійшла до подарунку!");
-}
-
-gameLoop();
-</script>
-
-</body>
-</html>
