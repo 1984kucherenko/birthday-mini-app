@@ -22,16 +22,16 @@ body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
 }
 #player {
   position:absolute;
-  width:50px;
-  height:50px;
+  width:80px;
+  height:80px;
   left:50px;
   bottom:20px;
   z-index:5;
 }
 #monster {
   position:absolute;
-  width:50px;
-  height:50px;
+  width:80px;
+  height:80px;
   left:500px;
   bottom:20px;
   z-index:4;
@@ -39,8 +39,8 @@ body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
 }
 #gift {
   position:absolute;
-  width:60px;
-  height:60px;
+  width:100px;
+  height:100px;
   left:1000px;
   bottom:20px;
   z-index:5;
@@ -76,7 +76,7 @@ const bg1 = document.getElementById('background1');
 const bg2 = document.getElementById('background2');
 let bgX1 = 0;
 let bgX2 = window.innerWidth;
-const speed = 3;
+const speed = 1.5; // повільніший рух
 
 // Позиції монстра і подарунка відносно світу
 let monsterX = 500;
@@ -109,15 +109,15 @@ function gameLoop(){
          blocked = true; // герой зупиняється
   }
 
-  // Рух монстра і подарунка тільки якщо гра не зупинена через монстра
+  // Рух монстра і подарунка тільки якщо герой не зупинений
   if(!blocked){
     monsterX -= speed;
     giftX -= speed;
   }
 
   // Циклічне повторення монстра і подарунка
-  if(monsterX < -50) monsterX = window.innerWidth + Math.random()*200;
-  if(giftX < -60) giftX = window.innerWidth + 400 + Math.random()*200;
+  if(monsterX < -80) monsterX = window.innerWidth + Math.random()*200;
+  if(giftX < -100) giftX = window.innerWidth + 400 + Math.random()*200;
 
   monster.style.left = monsterX + 'px';
   gift.style.left = giftX + 'px';
@@ -141,4 +141,31 @@ monster.addEventListener('click', ()=>{
   if(monsterClicks >= 3) monster.style.opacity = 0.5; // прохідний
 });
 
-function showConfett
+function showConfetti(){
+  confettiCanvas.style.display='block';
+  const pieces=[];
+  for(let i=0;i<200;i++){
+    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
+  }
+  function animate(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    for(const p of pieces){
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+      ctx.fill();
+      p.y += p.dy;
+      if(p.y>window.innerHeight)p.y=0;
+    }
+    if(!gamePaused) requestAnimationFrame(animate);
+  }
+  animate();
+  setTimeout(()=> alert("🎉 Вітаємо! Героїня дійшла до подарунку!"), 100);
+}
+
+// Старт гри
+gameLoop();
+</script>
+
+</body>
+</html>
