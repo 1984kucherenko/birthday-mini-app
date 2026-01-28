@@ -1,3 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Hero Game</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("background.png");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+.hero, .monster, .gift {
+  position: absolute;
+  bottom: 40px;
+}
+
+.hero {
+  width: 140px;
+  left: 80px;
+  z-index: 3;
+}
+
+.monster {
+  width: 140px;
+  z-index: 3;
+}
+
+.gift {
+  width: 120px;
+  z-index: 3;
+}
+
+#startBtn {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  font-size: 18px;
+  z-index: 10;
+}
+
+#question {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  color: white;
+}
+
+#questionBox {
+  background: #222;
+  padding: 20px;
+  border-radius: 14px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.answer {
+  margin-top: 12px;
+  padding: 10px;
+  background: #444;
+  border-radius: 8px;
+}
+.answer:active {
+  background: #666;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+  <img src="hero.png" class="hero" id="hero">
+  <img src="monster.png" class="monster" id="monster">
+  <img src="gift.png" class="gift" id="gift">
+
+  <button id="startBtn">▶ Start</button>
+
+  <div id="question">
+    <div id="questionBox">
+      <h3>Якби ти була супергероєм, то яку б суперсилу ти мала?</h3>
+      <div class="answer">1️⃣ Читати думки 🤯</div>
+      <div class="answer">2️⃣ Зупиняти час ☕⏸️</div>
+      <div class="answer">3️⃣ Все спрощувати ✨😎</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const game = document.getElementById("game");
 const hero = document.getElementById("hero");
@@ -9,18 +113,16 @@ const answers = document.querySelectorAll(".answer");
 
 let running = false;
 let bgX = 0;
-let animationStarted = false;
 
-const heroX = 80;
+// ❗ фіксовані відстані
 const monsterDistance = 600;
 const giftDistance = 1000;
 
 let monsterAlive = true;
-let gameFinished = false;
 
 function updatePositions() {
-  monster.style.left = heroX + monsterDistance + bgX + "px";
-  gift.style.left   = heroX + giftDistance + bgX + "px";
+  monster.style.left = (80 + monsterDistance + bgX) + "px";
+  gift.style.left   = (80 + giftDistance + bgX) + "px";
 }
 
 function collide(a, b) {
@@ -35,47 +137,43 @@ function collide(a, b) {
 }
 
 function loop() {
-  if (running) {
-    bgX -= 0.4; // повільніше — краще для мобільного
-    game.style.backgroundPositionX = bgX + "px";
-    updatePositions();
+  if (!running) return;
 
-    if (monsterAlive && collide(hero, monster)) {
-      running = false;
-      question.style.display = "flex";
-    }
+  bgX -= 0.5;
+  game.style.backgroundPositionX = bgX + "px";
 
-    if (!monsterAlive && !gameFinished && collide(hero, gift)) {
-      gameFinished = true;
-      running = false;
-      setTimeout(() => {
-        alert("🎁 Вітаю! Подарунок!");
-      }, 100);
-    }
+  updatePositions();
+
+  if (monsterAlive && collide(hero, monster)) {
+    running = false;
+    question.style.display = "flex";
+  }
+
+  if (!monsterAlive && collide(hero, gift)) {
+    running = false;
+    alert("🎁 Вітаю! Ти дійшла до подарунка!");
   }
 
   requestAnimationFrame(loop);
 }
 
-// старт
 startBtn.onclick = () => {
   running = true;
   startBtn.style.display = "none";
   updatePositions();
-
-  if (!animationStarted) {
-    animationStarted = true;
-    loop();
-  }
+  loop();
 };
 
-// відповіді
 answers.forEach(a => {
   a.onclick = () => {
     monsterAlive = false;
     monster.style.display = "none";
     question.style.display = "none";
     running = true;
+    loop();
   };
 });
 </script>
+
+</body>
+</html>
