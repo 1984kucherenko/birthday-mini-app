@@ -2,20 +2,51 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Героїня вперед!</title>
+<title>Бігуча героїня</title>
 <style>
   body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
-  #gameArea { position:relative; width:100vw; height:100vh; background: url('background.png') no-repeat center center; background-size: cover; }
-  #player { position:absolute; width:50px; height:50px; left:0; bottom:50px; z-index:5; }
-  #monster { position:absolute; width:50px; height:50px; left:300px; bottom:50px; z-index:4; cursor:pointer;}
-  #gift { position:absolute; width:60px; height:60px; left:600px; bottom:50px; z-index:5;}
+  #gameArea {
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    background: #87ceeb; /* тимчасовий фон, можна замінити на картинку */
+  }
+  #bg1, #bg2 {
+    position:absolute;
+    top:0; left:0;
+    width:100vw;
+    height:100vh;
+    background: url('background.png') repeat-x;
+    background-size: cover;
+  }
+  #player {
+    position:absolute;
+    width:64px;
+    height:64px;
+    left:50px;
+    bottom:20px;
+    z-index:5;
+    background: url('player_sprite.png') 0 0 no-repeat;
+  }
+  #monster, #gift {
+    position:absolute;
+    width:50px;
+    height:50px;
+    bottom:20px;
+    z-index:4;
+  }
+  #monster { left:600px; cursor:pointer; }
+  #gift { left:1200px; }
   #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10;}
 </style>
 </head>
 <body>
 
 <div id="gameArea">
-  <img id="player" src="player.png" alt="Героїня">
+  <div id="bg1"></div>
+  <div id="bg2"></div>
+  <div id="player"></div>
   <img id="monster" src="monster.png" alt="Монстр">
   <img id="gift" src="gift.png" alt="Подарунок">
   <canvas id="confetti"></canvas>
@@ -25,53 +56,83 @@
 const player = document.getElementById('player');
 const monster = document.getElementById('monster');
 const gift = document.getElementById('gift');
+const bg1 = document.getElementById('bg1');
+const bg2 = document.getElementById('bg2');
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
 confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
-let posX = 0;
-let posY = parseInt(window.innerHeight - 100); // нижня позиція
+let bgX1 = 0;
+let bgX2 = window.innerWidth;
+let bgSpeed = 4;
+
+let monsterX = 600;
+let giftX = 1200;
+
 let monsterClicks = 0;
-const speed = 2; // швидкість руху вправо
 
-// Основний цикл анімації
+// --- Спрайт анімація гравця ---
+let spriteFrame = 0;
+const spriteWidth = 64;
+const spriteHeight = 64;
+const totalFrames = 6; // кількість кадрів у спрайті
+let spriteCounter = 0;
+
+// --- Основний цикл ---
 function gameLoop(){
-  // Рух вправо
-  posX += speed;
-  player.style.left = posX + 'px';
-  player.style.bottom = posY + 'px';
+  // рух фону
+  bgX1 -= bgSpeed;
+  bgX2 -= bgSpeed;
+  if(bgX1 <= -window.innerWidth) bgX1 = window.innerWidth;
+  if(bgX2 <= -window.innerWidth) bgX2 = window.innerWidth;
+  bg1.style.left = bgX1 + 'px';
+  bg2.style.left = bgX2 + 'px';
 
+  // рух монстра і подарунку разом з фоном
+  monsterX -= bgSpeed;
+  giftX -= bgSpeed;
+  monster.style.left = monsterX + 'px';
+  gift.style.left = giftX + 'px';
+
+  // перевірка зіткнення з монстром
   checkMonster();
+  // перевірка досягнення подарунку
   checkGift();
+
+  // спрайт гравця
+  spriteCounter++;
+  if(spriteCounter % 5 === 0){ // регулюємо швидкість анімації
+    spriteFrame = (spriteFrame +1) % totalFrames;
+    player.style.backgroundPosition = `-${spriteFrame * spriteWidth}px 0px`;
+  }
 
   requestAnimationFrame(gameLoop);
 }
 
-// Перевірка зіткнення з монстром
+// --- Монстр ---
 function checkMonster(){
   const playerRect = player.getBoundingClientRect();
   const monsterRect = monster.getBoundingClientRect();
 
-  if(monsterClicks < 3 && 
+  if(monsterClicks < 3 &&
      !(playerRect.right < monsterRect.left || 
        playerRect.left > monsterRect.right || 
        playerRect.bottom < monsterRect.top || 
        playerRect.top > monsterRect.bottom)) {
-         // зупинка героя, якщо монстр живий
-         posX -= speed;
+         // зупинка героя
+         monsterX += bgSpeed; // не даємо пройти
   }
 }
 
-// Клік по монстру
 monster.addEventListener('click', ()=>{
   monsterClicks++;
-  if(monsterClicks>=3){
-    monster.style.opacity=0.5; // прохідний
+  if(monsterClicks >= 3){
+    monster.style.opacity = 0.5; // можна пройти
   }
 });
 
-// Перевірка досягнення подарунку
+// --- Подарунок ---
 function checkGift(){
   const playerRect = player.getBoundingClientRect();
   const giftRect = gift.getBoundingClientRect();
@@ -83,7 +144,7 @@ function checkGift(){
   }
 }
 
-// Конфеті
+// --- Конфеті ---
 function showConfetti(){
   confettiCanvas.style.display='block';
   const pieces=[];
