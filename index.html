@@ -4,48 +4,48 @@
 <meta charset="UTF-8">
 <title>Біжучий герой</title>
 <style>
-  body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
-  #gameArea {
-    position:relative;
-    width:100vw;
-    height:100vh;
-    overflow:hidden;
-    background: #a0d8f1;
-  }
-  #background1, #background2 {
-    position:absolute;
-    top:0;
-    width:200%;
-    height:100%;
-    background: url('background.png') repeat-x;
-    background-size: cover;
-  }
-  #player {
-    position:absolute;
-    width:50px;
-    height:50px;
-    left:50px;
-    bottom:20px;
-    z-index:5;
-  }
-  #monster {
-    position:absolute;
-    width:50px;
-    height:50px;
-    left:500px;
-    bottom:20px;
-    z-index:4;
-    cursor:pointer;
-  }
-  #gift {
-    position:absolute;
-    width:60px;
-    height:60px;
-    left:1000px;
-    bottom:20px;
-    z-index:5;
-  }
-  #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10; }
+body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
+#gameArea {
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  background: #a0d8f1;
+}
+#background1, #background2 {
+  position:absolute;
+  top:0;
+  width:100vw;
+  height:100vh;
+  background: url('background.png') repeat-x;
+  background-size: cover;
+}
+#player {
+  position:absolute;
+  width:50px;
+  height:50px;
+  left:50px;
+  bottom:20px;
+  z-index:5;
+}
+#monster {
+  position:absolute;
+  width:50px;
+  height:50px;
+  left:500px;
+  bottom:20px;
+  z-index:4;
+  cursor:pointer;
+}
+#gift {
+  position:absolute;
+  width:60px;
+  height:60px;
+  left:1000px;
+  bottom:20px;
+  z-index:5;
+}
+#confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10; }
 </style>
 </head>
 <body>
@@ -69,25 +69,98 @@ confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
 let monsterClicks = 0;
-let bg1 = document.getElementById('background1');
-let bg2 = document.getElementById('background2');
-let bgX = 0;
-const speed = 3; // швидкість руху вперед
+
+// Фонові блоки
+const bg1 = document.getElementById('background1');
+const bg2 = document.getElementById('background2');
+let bgX1 = 0;
+let bgX2 = window.innerWidth;
+const speed = 3;
+
+// Позиції монстра і подарунка відносно світу
+let monsterX = 500;
+let giftX = 1000;
 
 function gameLoop(){
-  // Прокрутка фону
-  bgX -= speed;
-  if(bgX <= -window.innerWidth) bgX = 0;
-  bg1.style.left = bgX + 'px';
-  bg2.style.left = (bgX + window.innerWidth) + 'px';
+  // Рух фону
+  bgX1 -= speed;
+  bgX2 -= speed;
 
-  // Рух монстра і подарунку разом із фоном
-  monster.style.left = (parseInt(monster.style.left || 500) - speed) + 'px';
-  gift.style.left = (parseInt(gift.style.left || 1000) - speed) + 'px';
+  if(bgX1 <= -window.innerWidth) bgX1 = bgX2 + window.innerWidth;
+  if(bgX2 <= -window.innerWidth) bgX2 = bgX1 + window.innerWidth;
 
-  // Монстр блокує рух (зупинка героя візуальна)
+  bg1.style.left = bgX1 + 'px';
+  bg2.style.left = bgX2 + 'px';
+
+  // Рух монстра і подарунка разом із світом
+  monsterX -= speed;
+  giftX -= speed;
+
+  // Циклічне повторення монстра і подарунка (щоб ефект нескінченного світу)
+  if(monsterX < -50) monsterX = window.innerWidth + Math.random()*200;
+  if(giftX < -60) giftX = window.innerWidth + 400 + Math.random()*200;
+
+  monster.style.left = monsterX + 'px';
+  gift.style.left = giftX + 'px';
+
+  // Монстр блокує рух (героїня постійно біжить)
   const playerRect = player.getBoundingClientRect();
   const monsterRect = monster.getBoundingClientRect();
   if(monsterClicks < 3 && 
      !(playerRect.right < monsterRect.left || 
        playerRect.left > monsterRect.right || 
+       playerRect.bottom < monsterRect.top || 
+       playerRect.top > monsterRect.bottom)) {
+    // герой ніби зупиняється, хоча фон рухається
+  }
+
+  checkGift();
+  requestAnimationFrame(gameLoop);
+}
+
+// Клік по монстру
+monster.addEventListener('click', ()=>{
+  monsterClicks++;
+  if(monsterClicks >= 3) monster.style.opacity = 0.5; // прохідний
+});
+
+// Перевірка досягнення подарунку
+function checkGift(){
+  const playerRect = player.getBoundingClientRect();
+  const giftRect = gift.getBoundingClientRect();
+  if(!(playerRect.right < giftRect.left || 
+       playerRect.left > giftRect.right || 
+       playerRect.bottom < giftRect.top || 
+       playerRect.top > giftRect.bottom)){
+    showConfetti();
+  }
+}
+
+// Конфеті
+function showConfetti(){
+  confettiCanvas.style.display='block';
+  const pieces=[];
+  for(let i=0;i<200;i++){
+    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
+  }
+  function animate(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    for(const p of pieces){
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+      ctx.fill();
+      p.y += p.dy;
+      if(p.y>window.innerHeight)p.y=0;
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+  alert("🎉 Вітаємо! Героїня дійшла до подарунку!");
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
