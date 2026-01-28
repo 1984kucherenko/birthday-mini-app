@@ -32,7 +32,7 @@ body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
   position:absolute;
   width:80px;
   height:80px;
-  left:700px; /* відступ від старту героїні */
+  left:500px;
   bottom:20px;
   z-index:4;
   cursor:pointer;
@@ -41,7 +41,7 @@ body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
   position:absolute;
   width:100px;
   height:100px;
-  left:1200px;
+  left:1000px;
   bottom:20px;
   z-index:5;
 }
@@ -69,7 +69,7 @@ confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
 let monsterClicks = 0;
-let gamePaused = false;
+let gamePaused = false; // Зупинка гри
 
 // Фонові блоки
 const bg1 = document.getElementById('background1');
@@ -79,12 +79,13 @@ let bgX2 = window.innerWidth;
 const speed = 1.5;
 
 // Позиції монстра і подарунка відносно світу
-let monsterX = 700; // від початку відстань від героїні
-let giftX = 1200;
+let monsterX = 500;
+let giftX = 1000;
 
 function gameLoop(){
-  if(gamePaused) return;
+  if(gamePaused) return; // гра зупинена
 
+  // Перевірка зіткнення героя з монстром
   const playerRect = player.getBoundingClientRect();
   const monsterRect = monster.getBoundingClientRect();
   const giftRect = gift.getBoundingClientRect();
@@ -95,11 +96,12 @@ function gameLoop(){
        playerRect.left > monsterRect.right ||
        playerRect.bottom < monsterRect.top ||
        playerRect.top > monsterRect.bottom)) {
-         blocked = true; // герой зупиняється перед монстром
+         blocked = true; // герой зупиняється
   }
 
+  // Якщо герой не заблокований, рухаємо фон і об’єкти
   if(!blocked){
-    // рух фону
+    // Рух фону
     bgX1 -= speed;
     bgX2 -= speed;
     if(bgX1 <= -window.innerWidth) bgX1 = bgX2 + window.innerWidth;
@@ -107,12 +109,12 @@ function gameLoop(){
     bg1.style.left = bgX1 + 'px';
     bg2.style.left = bgX2 + 'px';
 
-    // рух монстра і подарунка
+    // Рух монстра і подарунка
     monsterX -= speed;
     giftX -= speed;
   }
 
-  // повторення монстра і подарунка
+  // Циклічне повторення монстра і подарунка
   if(monsterX < -80) monsterX = window.innerWidth + Math.random()*200;
   if(giftX < -100) giftX = window.innerWidth + 400 + Math.random()*200;
 
@@ -124,7 +126,7 @@ function gameLoop(){
        playerRect.left > giftRect.right ||
        playerRect.bottom < giftRect.top ||
        playerRect.top > giftRect.bottom)){
-    gamePaused = true;
+    gamePaused = true; // зупинка гри
     showConfetti();
     return;
   }
@@ -132,13 +134,13 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
-// клік по монстру
+// Клік по монстру
 monster.addEventListener('click', ()=>{
   monsterClicks++;
-  if(monsterClicks >= 3) monster.style.opacity = 0.5;
+  if(monsterClicks >= 3) monster.style.opacity = 0.5; // прохідний
 });
 
-// конфеті
+// Конфеті
 function showConfetti(){
   confettiCanvas.style.display='block';
   const pieces=[];
@@ -161,7 +163,7 @@ function showConfetti(){
   setTimeout(()=> alert("🎉 Вітаємо! Героїня дійшла до подарунку!"), 100);
 }
 
-// старт гри
+// Старт гри
 gameLoop();
 </script>
 
