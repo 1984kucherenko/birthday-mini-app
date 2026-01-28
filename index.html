@@ -6,84 +6,81 @@
 <title>Super Hero Game</title>
 
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: sans-serif;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: sans-serif;
+}
 
-  #game {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background: url("background.png") repeat-x;
-    background-size: auto 100%;
-  }
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: url("background.png") repeat-x;
+  background-size: auto 100%;
+}
 
-  .hero, .monster, .gift {
-    position: absolute;
-    bottom: 40px;
-    user-select: none;
-    touch-action: manipulation;
-  }
+.hero, .monster, .gift {
+  position: absolute;
+  bottom: 40px;
+  user-select: none;
+}
 
-  .hero {
-    width: 120px;
-    left: 80px;
-    z-index: 3;
-  }
+.hero {
+  width: 140px;
+  left: 80px;
+  z-index: 3;
+}
 
-  .monster {
-    width: 120px;
-    z-index: 3;
-  }
+.monster {
+  width: 140px;
+  z-index: 3;
+}
 
-  .gift {
-    width: 100px;
-    z-index: 3;
-  }
+.gift {
+  width: 120px;
+  z-index: 3;
+}
 
-  #startBtn {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 24px;
-    font-size: 18px;
-    z-index: 10;
-  }
+#startBtn {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  font-size: 18px;
+  z-index: 10;
+}
 
-  #questionBox {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    color: #fff;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 20;
-  }
+#questionBox {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
 
-  #questionContent {
-    background: #222;
-    padding: 20px;
-    border-radius: 12px;
-    max-width: 90%;
-    text-align: center;
-  }
+#questionContent {
+  background: #222;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 90%;
+  text-align: center;
+}
 
-  .answer {
-    margin-top: 12px;
-    padding: 10px;
-    background: #444;
-    border-radius: 8px;
-  }
-
-  .answer:active {
-    background: #666;
-  }
+.answer {
+  margin-top: 12px;
+  padding: 10px;
+  background: #444;
+  border-radius: 8px;
+}
+.answer:active {
+  background: #666;
+}
 </style>
 </head>
 
@@ -99,19 +96,5 @@
   <div id="questionBox">
     <div id="questionContent">
       <h3>Якби ти була супергероєм, то яку б суперсилу ти мала?</h3>
-
-      <div class="answer">1️⃣ Читати думки 🤯</div>
-      <div class="answer">2️⃣ Зупиняти час ☕⏸️</div>
-      <div class="answer">3️⃣ Перетворювати складні питання на “а, так от воно що!” ✨😎</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const game = document.getElementById("game");
-  const hero = document.getElementById("hero");
-  const monster = document.getElementById("monster");
-  const gift = document.getElementById("gift");
-  const startBtn = document.getElementById("startBtn");
-  const questionBox = document.getElementById("questionBox");
-  const answers = document.
+      <div class="answer">1️⃣ Читати думки, але тільки коли люди плутаються 🤯</div>
+      <div class="answer">2️⃣ Зупиняти час, щоб допити
