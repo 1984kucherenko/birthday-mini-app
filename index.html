@@ -69,6 +69,7 @@ confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
 let monsterClicks = 0;
+let gamePaused = false; // Зупинка гри
 
 // Фонові блоки
 const bg1 = document.getElementById('background1');
@@ -82,6 +83,8 @@ let monsterX = 500;
 let giftX = 1000;
 
 function gameLoop(){
+  if(gamePaused) return; // зупиняємо гру
+
   // Рух фону
   bgX1 -= speed;
   bgX2 -= speed;
@@ -92,29 +95,43 @@ function gameLoop(){
   bg1.style.left = bgX1 + 'px';
   bg2.style.left = bgX2 + 'px';
 
-  // Рух монстра і подарунка разом із світом
-  monsterX -= speed;
-  giftX -= speed;
+  // Перевірка зіткнення з монстром
+  const playerRect = player.getBoundingClientRect();
+  const monsterRect = monster.getBoundingClientRect();
+  const giftRect = gift.getBoundingClientRect();
 
-  // Циклічне повторення монстра і подарунка (щоб ефект нескінченного світу)
+  let blocked = false;
+  if(monsterClicks < 3 &&
+     !(playerRect.right < monsterRect.left ||
+       playerRect.left > monsterRect.right ||
+       playerRect.bottom < monsterRect.top ||
+       playerRect.top > monsterRect.bottom)) {
+         blocked = true; // герой зупиняється
+  }
+
+  // Рух монстра і подарунка тільки якщо гра не зупинена через монстра
+  if(!blocked){
+    monsterX -= speed;
+    giftX -= speed;
+  }
+
+  // Циклічне повторення монстра і подарунка
   if(monsterX < -50) monsterX = window.innerWidth + Math.random()*200;
   if(giftX < -60) giftX = window.innerWidth + 400 + Math.random()*200;
 
   monster.style.left = monsterX + 'px';
   gift.style.left = giftX + 'px';
 
-  // Монстр блокує рух (героїня постійно біжить)
-  const playerRect = player.getBoundingClientRect();
-  const monsterRect = monster.getBoundingClientRect();
-  if(monsterClicks < 3 && 
-     !(playerRect.right < monsterRect.left || 
-       playerRect.left > monsterRect.right || 
-       playerRect.bottom < monsterRect.top || 
-       playerRect.top > monsterRect.bottom)) {
-    // герой ніби зупиняється, хоча фон рухається
+  // Перевірка досягнення подарунка
+  if(!(playerRect.right < giftRect.left ||
+       playerRect.left > giftRect.right ||
+       playerRect.bottom < giftRect.top ||
+       playerRect.top > giftRect.bottom)){
+    gamePaused = true; // зупиняємо гру
+    showConfetti();
+    return;
   }
 
-  checkGift();
   requestAnimationFrame(gameLoop);
 }
 
@@ -124,43 +141,4 @@ monster.addEventListener('click', ()=>{
   if(monsterClicks >= 3) monster.style.opacity = 0.5; // прохідний
 });
 
-// Перевірка досягнення подарунку
-function checkGift(){
-  const playerRect = player.getBoundingClientRect();
-  const giftRect = gift.getBoundingClientRect();
-  if(!(playerRect.right < giftRect.left || 
-       playerRect.left > giftRect.right || 
-       playerRect.bottom < giftRect.top || 
-       playerRect.top > giftRect.bottom)){
-    showConfetti();
-  }
-}
-
-// Конфеті
-function showConfetti(){
-  confettiCanvas.style.display='block';
-  const pieces=[];
-  for(let i=0;i<200;i++){
-    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
-  }
-  function animate(){
-    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-    for(const p of pieces){
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
-      ctx.fill();
-      p.y += p.dy;
-      if(p.y>window.innerHeight)p.y=0;
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
-  alert("🎉 Вітаємо! Героїня дійшла до подарунку!");
-}
-
-gameLoop();
-</script>
-
-</body>
-</html>
+function showConfett
