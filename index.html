@@ -124,4 +124,46 @@ function gameLoop(){
        playerRect.left > giftRect.right ||
        playerRect.bottom < giftRect.top ||
        playerRect.top > giftRect.bottom)){
-    gamePause
+    gamePaused = true;
+    showConfetti();
+    return;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// клік по монстру
+monster.addEventListener('click', ()=>{
+  monsterClicks++;
+  if(monsterClicks >= 3) monster.style.opacity = 0.5;
+});
+
+// конфеті
+function showConfetti(){
+  confettiCanvas.style.display='block';
+  const pieces=[];
+  for(let i=0;i<200;i++){
+    pieces.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, r: Math.random()*6+2, color: `hsl(${Math.random()*360},100%,50%)`, dy: Math.random()*5+2});
+  }
+  function animate(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    for(const p of pieces){
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+      ctx.fill();
+      p.y += p.dy;
+      if(p.y>window.innerHeight)p.y=0;
+    }
+    if(!gamePaused) requestAnimationFrame(animate);
+  }
+  animate();
+  setTimeout(()=> alert("🎉 Вітаємо! Героїня дійшла до подарунку!"), 100);
+}
+
+// старт гри
+gameLoop();
+</script>
+
+</body>
+</html>
