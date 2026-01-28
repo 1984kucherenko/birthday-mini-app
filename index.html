@@ -2,95 +2,83 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Лабіринт до подарунку 🎁</title>
+<title>Героїня вперед!</title>
 <style>
-  body { margin:0; overflow:hidden; background:#fef6e5; touch-action: none; font-family: Arial;}
-  #gameArea { position:relative; width:100vw; height:100vh; background:#fff6e5;}
-  #player { position:absolute; width:50px; height:50px; left:10px; top:calc(100vh - 60px); z-index:5; }
-  #gift { position:absolute; width:60px; height:60px; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5;}
-  #monster { position:absolute; width:50px; height:50px; left:50%; top:30%; transform:translate(-50%,0); z-index:4; cursor:pointer;}
-  .wall { position:absolute; background:#444; z-index:3; }
+  body { margin:0; overflow:hidden; touch-action:none; font-family:Arial; }
+  #gameArea { position:relative; width:100vw; height:100vh; background: url('background.png') no-repeat center center; background-size: cover; }
+  #player { position:absolute; width:50px; height:50px; left:0; bottom:50px; z-index:5; }
+  #monster { position:absolute; width:50px; height:50px; left:300px; bottom:50px; z-index:4; cursor:pointer;}
+  #gift { position:absolute; width:60px; height:60px; left:600px; bottom:50px; z-index:5;}
   #confetti { position:absolute; width:100%; height:100%; pointer-events:none; display:none; z-index:10;}
 </style>
 </head>
 <body>
 
 <div id="gameArea">
-  <img id="player" src="player.png" alt="Гравець">
-  <img id="gift" src="gift.png" alt="Подарунок">
+  <img id="player" src="player.png" alt="Героїня">
   <img id="monster" src="monster.png" alt="Монстр">
+  <img id="gift" src="gift.png" alt="Подарунок">
   <canvas id="confetti"></canvas>
 </div>
 
 <script>
-const gameArea = document.getElementById('gameArea');
 const player = document.getElementById('player');
-const gift = document.getElementById('gift');
 const monster = document.getElementById('monster');
+const gift = document.getElementById('gift');
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
 confettiCanvas.width = window.innerWidth;
 confettiCanvas.height = window.innerHeight;
 
-let posX = 10;
-let posY = window.innerHeight - 60;
-
+let posX = 0;
+let posY = parseInt(window.innerHeight - 100); // нижня позиція
 let monsterClicks = 0;
+const speed = 2; // швидкість руху вправо
 
-// Лабіринт стіни
-const walls = [];
-function createWall(x, y, w, h){
-  const wall = document.createElement('div');
-  wall.classList.add('wall');
-  wall.style.left = x+'px';
-  wall.style.top = y+'px';
-  wall.style.width = w+'px';
-  wall.style.height = h+'px';
-  gameArea.appendChild(wall);
-  walls.push(wall);
-}
-// Приклад лабіринту (можна додавати більше)
-createWall(100,100,200,20);
-createWall(300,150,20,200);
-createWall(50,300,250,20);
+// Основний цикл анімації
+function gameLoop(){
+  // Рух вправо
+  posX += speed;
+  player.style.left = posX + 'px';
+  player.style.bottom = posY + 'px';
 
-// Перевірка зіткнення
-function isColliding(el1Rect, el2Rect){
-  return !(el1Rect.right < el2Rect.left || 
-           el1Rect.left > el2Rect.right || 
-           el1Rect.bottom < el2Rect.top || 
-           el1Rect.top > el2Rect.bottom);
-}
-
-// Обробка руху
-function movePlayer(dx, dy){
-  let newX = posX + dx;
-  let newY = posY + dy;
-
-  const tempRect = {left:newX, top:newY, right:newX+50, bottom:newY+50};
-
-  for(const wall of walls){
-    const wallRect = wall.getBoundingClientRect();
-    if(isColliding(tempRect, wallRect)) return; // зіткнення зі стіною
-  }
-
-  // монстр блокує рух, якщо не клікнули 3 рази
-  const monsterRect = monster.getBoundingClientRect();
-  if(monsterClicks < 3 && isColliding(tempRect, monsterRect)) return;
-
-  posX = newX;
-  posY = newY;
-  player.style.left = posX+'px';
-  player.style.top = posY+'px';
-
+  checkMonster();
   checkGift();
+
+  requestAnimationFrame(gameLoop);
 }
+
+// Перевірка зіткнення з монстром
+function checkMonster(){
+  const playerRect = player.getBoundingClientRect();
+  const monsterRect = monster.getBoundingClientRect();
+
+  if(monsterClicks < 3 && 
+     !(playerRect.right < monsterRect.left || 
+       playerRect.left > monsterRect.right || 
+       playerRect.bottom < monsterRect.top || 
+       playerRect.top > monsterRect.bottom)) {
+         // зупинка героя, якщо монстр живий
+         posX -= speed;
+  }
+}
+
+// Клік по монстру
+monster.addEventListener('click', ()=>{
+  monsterClicks++;
+  if(monsterClicks>=3){
+    monster.style.opacity=0.5; // прохідний
+  }
+});
 
 // Перевірка досягнення подарунку
 function checkGift(){
   const playerRect = player.getBoundingClientRect();
   const giftRect = gift.getBoundingClientRect();
-  if(isColliding(playerRect, giftRect)){
+  if(!(playerRect.right < giftRect.left || 
+       playerRect.left > giftRect.right || 
+       playerRect.bottom < giftRect.top || 
+       playerRect.top > giftRect.bottom)){
     showConfetti();
   }
 }
@@ -115,40 +103,10 @@ function showConfetti(){
     requestAnimationFrame(animate);
   }
   animate();
-  alert("🎉 Вітаємо! Ти відкрив подарунок!");
+  alert("🎉 Вітаємо! Героїня дійшла до подарунку!");
 }
 
-// Монстр: клік по ньому
-monster.addEventListener('click', ()=>{
-  monsterClicks++;
-  if(monsterClicks>=3){
-    monster.style.opacity = 0.5; // прохідний
-  }
-});
-
-// Свайпи / drag для мобільного
-let startX, startY;
-player.addEventListener('touchstart',(e)=>{
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-});
-player.addEventListener('touchmove',(e)=>{
-  let dx = e.touches[0].clientX - startX;
-  let dy = e.touches[0].clientY - startY;
-  movePlayer(dx, dy);
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-  e.preventDefault();
-});
-
-// клавіші для ПК
-document.addEventListener('keydown',(e)=>{
-  const step=20;
-  if(e.key==='ArrowUp') movePlayer(0,-step);
-  if(e.key==='ArrowDown') movePlayer(0,step);
-  if(e.key==='ArrowLeft') movePlayer(-step,0);
-  if(e.key==='ArrowRight') movePlayer(step,0);
-});
+gameLoop();
 </script>
 
 </body>
